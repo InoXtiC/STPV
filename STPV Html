@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Singapore Toto Number Input</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .input-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        input[type="number"] {
+            width: 60px;
+            padding: 10px;
+            font-size: 18px;
+            text-align: center;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: center;
+        }
+        #error {
+            color: red;
+            text-align: center;
+            margin-top: 10px;
+        }
+        #draw-info {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Singapore Toto Number Selector</h1>
+    <p>Enter 6 unique numbers from 1 to 49 in the boxes below, or click the button to auto-fill with the latest Toto winning numbers from Singapore Pools.</p>
+    
+    <div class="input-container">
+        <input type="number" id="num1" min="1" max="49" placeholder="1-49">
+        <input type="number" id="num2" min="1" max="49" placeholder="1-49">
+        <input type="number" id="num3" min="1" max="49" placeholder="1-49">
+        <input type="number" id="num4" min="1" max="49" placeholder="1-49">
+        <input type="number" id="num5" min="1" max="49" placeholder="1-49">
+        <input type="number" id="num6" min="1" max="49" placeholder="1-49">
+    </div>
+    
+    <button onclick="fetchLatestToto()">Load Latest Toto Winning Numbers</button>
+    
+    <div id="draw-info"></div>
+    <div id="additional"></div>
+    <div id="error"></div>
+
+    <script>
+        async function fetchLatestToto() {
+            const url = 'https://www.singaporepools.com.sg/en/product/sr/Pages/toto_results.aspx';
+            const proxy = 'https://cors-anywhere.herokuapp.com/'; // Use this proxy to bypass CORS (visit the proxy URL first to activate if needed)
+            const errorDiv = document.getElementById('error');
+            const drawInfo = document.getElementById('draw-info');
+            const additionalDiv = document.getElementById('additional');
+            
+            errorDiv.textContent = '';
+            drawInfo.textContent = '';
+            additionalDiv.textContent = '';
+
+            try {
+                const response = await fetch(proxy + url);
+                if (!response.ok) throw new Error('Network response was not ok');
+                
+                const html = await response.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                
+                // Get all <p> elements
+                const ps = Array.from(doc.querySelectorAll('p'));
+                
+                // Extract draw info (assuming first few <p> are date and draw no)
+                const drawDate = ps[0] ? ps[0].textContent.trim() : 'N/A';
+                const drawNo = ps[1] ? ps[1].textContent.trim() : 'N/A';
+                
+                // Find the winning numbers table: Look for the table with <th> containing 'Winning Numbers'
+                let winningTable = Array.from(doc.querySelectorAll('table')).find(table => {
+                    const th = table.querySelector('th');
+                    return th && th.textContent.trim() === 'Winning Numbers';
+                });
+                
+                let winningNums = [];
+                if (winningTable) {
+                    winningNums = Array.from(winningTable.querySelectorAll('td')).map(td => td.textContent.trim());
+                }
+                
+                if (winningNums.length !== 6) {
+                    throw new Error('Unable to parse winning numbers');
+                }
+                
+                // Extract additional number (assuming next <p> after draw info)
+                const additionalLabel = ps[2] ? ps[2].textContent.trim() : '';
+                const additional = ps[3] ? ps[3].textContent.trim() : 'N/A';
+                
+                // Populate inputs
+                document.getElementById('num1').value = winningNums[0];
+                document.getElementById('num2').value = winningNums[1];
+                document.getElementById('num3').value = winningNums[2];
+                document.getElementById('num4').value = winningNums[3];
+                document.getElementById('num5').value = winningNums[4];
+                document.getElementById('num6').value = winningNums[5];
+                
+                // Display info
+                drawInfo.textContent = `${drawNo} - ${drawDate}`;
+                if (additionalLabel.includes('Additional')) {
+                    additionalDiv.textContent = `Additional Number: ${additional}`;
+                }
+                
+            } catch (error) {
+                errorDiv.textContent = `Error fetching data: ${error.message}. Note: You may need to visit https://cors-anywhere.herokuapp.com/ first to enable the proxy, or host this page on a server.`;
+            }
+        }
+    </script>
+</body>
+</html>
