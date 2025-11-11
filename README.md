@@ -1,2 +1,3 @@
 # STPV
-Singapore Toto Probability Visualizer Visually understand how Toto probability works
+Singapore Toto Probability Visualizer (STPV)
+Visually understand how Toto probability works
