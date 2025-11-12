@@ -3,148 +3,617 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Singapore Toto Number Input</title>
+    <title>Singapore Toto Probability Visualizer (STPV)</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f4f4f4;
+        body{font-family:Arial,sans-serif;max-width:900px;margin:0 auto;padding:20px;background:#f4f4f4;color:#333;transition:background 0.5s;}
+        h1{text-align:center;color:#1a5fb4;margin-bottom:10px;}
+        .subtitle{text-align:center;font-size:14px;color:#555;margin-bottom:20px;}
+        .input-grid{display:flex;justify-content:center;gap:8px;margin:20px 0;flex-wrap:wrap;align-items:center;}
+        input[type=number]{width:58px;padding:10px;font-size:18px;text-align:center;border:1px solid #ddd;border-radius:4px;}
+        .add-label{margin-left:10px;font-weight:bold;color:#2980b9;}
+        .action-buttons{text-align:center;margin:15px 0;display:flex;justify-content:center;gap:10px;flex-wrap:wrap;}
+        .action-buttons button, .action-buttons a{
+            padding:12px 20px;background:#4CAF50;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:16px;text-decoration:none;
         }
-        h1 {
-            text-align: center;
-            color: #333;
+        .action-buttons button:hover{background:#45a049;}
+        .action-buttons a{background:#1a73e8;}
+        .action-buttons a:hover{background:#1557b0;}
+        .global-stats{text-align:center;margin:15px 0;padding:10px;background:#fff;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);}
+        .global-stats .stat-item{display:inline-block;margin:0 20px;font-size:16px;}
+        .global-stats .stat-value{font-weight:bold;color:#1a5fb4;}
+        .prize-pool{margin:20px auto;padding:18px;background:#fff;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,0.1);max-width:800px;display:flex;gap:20px;}
+        .prize-config{flex:1;}
+        .prize-config h3{margin-top:0;text-align:center;color:#1a5fb4;font-size:18px;}
+        .prize-list{list-style:none;padding:0;margin:12px 0 0;}
+        .prize-item{margin:10px 0;display:flex;align-items:center;gap:10px;font-size:16px;}
+        .prize-label{flex:1;font-weight:bold;color:#555;min-width:180px;}
+        .prize-input{
+            width:160px !important;padding:10px;font-size:18px !important;text-align:center;
+            border:1px solid #ccc;border-radius:4px;box-sizing:border-box;
         }
-        .input-container {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 20px;
+        .prize-input:disabled{background:#f0f0f0;color:#666;cursor:not-allowed;}
+        .win-tracker{flex:1;background:#f9f9f9;padding:15px;border-radius:8px;}
+        .win-tracker h3{margin-top:0;text-align:center;color:#1a5fb4;font-size:18px;}
+        .win-list{list-style:none;padding:0;margin:12px 0 0;}
+        .win-item{margin:6px 0;display:flex;justify-content:space-between;font-size:15px;display:none;}
+        .win-item.visible{display:flex;}
+        .win-label{font-weight:bold;color:#555;}
+        .win-count{color:#d35400;font-weight:bold;}
+        .shared-winnings{margin-top:20px;font-size:14px;}
+        .shared-winnings p{font-size:13px;color:#555;margin-bottom:10px;}
+        .shared-row{
+            display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+            background:#fff;padding:12px;border-radius:6px;
+            box-shadow:0 1px 4px rgba(0,0,0,0.1);font-size:14px;
+            justify-content:space-between;
         }
-        input[type="number"] {
-            width: 60px;
-            padding: 10px;
-            font-size: 18px;
-            text-align: center;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+        .shared-group{flex:1;min-width:200px;text-align:center;}
+        .shared-group strong{color:#1a5fb4;}
+        .shared-group input[type=number]{
+            width:50px;padding:4px;font-size:13px;text-align:center;margin:0 4px;
+            border:1px solid #ccc;border-radius:4px;
         }
-        button {
-            display: block;
-            width: 100%;
-            padding: 10px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-            margin-bottom: 10px;
+        .shared-group .actual{color:#27ae60;font-weight:bold;}
+        .system-row{
+            background:#fff;padding:12px 16px;margin:8px 0;border-radius:8px;
+            box-shadow:0 2px 6px rgba(0,0,0,0.1);font-size:15px;
+            display:flex;align-items:center;gap:12px;flex-wrap:nowrap;
+            overflow:hidden;white-space:nowrap;
+            justify-content:space-between;
         }
-        button:hover {
-            background-color: #45a049;
+        .system-name{font-weight:bold;color:#1a5fb4;width:70px;flex-shrink:0;}
+        .spend, .profit-stat{flex-shrink:0;font-weight:bold;}
+        .profit-stat.positive{color:#27ae60;}
+        .profit-stat.negative{color:#e74c3c;}
+        .roll-group{display:flex;align-items:center;gap:6px;flex-shrink:0;}
+        .btn-roll{
+            padding:6px 12px;font-size:13px;border-radius:4px;border:none;cursor:pointer;
+            background:#4CAF50;color:#fff;font-weight:bold;
         }
-        #result {
-            margin-top: 20px;
-            padding: 10px;
-            background-color: #fff;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            text-align: center;
+        .btn-roll:hover{background:#45a049;}
+        .btn-stop{background:#e74c3c !important;color:#fff !important;}
+        .btn-stop:hover{background:#c0392b !important;}
+        .auto-checkbox{transform:scale(0.9);margin:0 4px 0 0;}
+        .speed-input{width:70px;font-size:12px;padding:3px;}
+        .btn-history{
+            padding:6px 10px;font-size:13px;border-radius:4px;border:none;cursor:pointer;
+            background:#6c757d;color:#fff;
         }
-        #error {
-            color: red;
-            text-align: center;
-            margin-top: 10px;
+        .btn-history:hover{background:#5a6268;}
+        .btn-reset{
+            padding:6px 10px;font-size:13px;border-radius:4px;border:none;cursor:pointer;
+            background:#9b59b6;color:#fff;
         }
-        #draw-info {
-            text-align: center;
-            margin-bottom: 20px;
+        .btn-reset:hover{background:#8e44ad;}
+        .btn-prize-random{
+            padding:10px 20px;background:#e67e22;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:bold;
+            margin:15px auto;display:block;
+        }
+        .btn-prize-random:hover{background:#d35400;}
+        .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);justify-content:center;align-items:center;z-index:100;}
+        .modal-content{background:#fff;padding:20px;max-width:700px;width:90%;max-height:80vh;overflow-y:auto;border-radius:10px;position:relative;}
+        .close{position:absolute;top:10px;right:15px;font-size:24px;cursor:pointer;color:#aaa;}
+        .close:hover{color:#000;}
+        .history-entry{padding:10px 0;border-bottom:1px dashed #eee;font-size:13px;}
+        .history-entry.win{background:#e8f5e9;}
+        .history-entry.win:hover{background:#d0e9d4;}
+        .jackpot{color:#d4af37;font-weight:bold;}
+        .match{font-weight:bold;color:#27ae60;}
+        .additional{font-weight:bold;color:#2980b9;}
+        .group-win{color:#8e44ad;font-weight:bold;}
+        .sort-btn{margin:10px 0;text-align:right;}
+        .sort-btn button{padding:6px 12px;background:#3498db;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:12px;}
+        .sort-btn button:hover{background:#2980b9;}
+        @keyframes flashGreen{0%,100%{box-shadow:0 0 0 #fff;}50%{box-shadow:0 0 30px #27ae60;}}
+        @keyframes flashRed{0%,100%{box-shadow:0 0 0 #fff;}50%{box-shadow:0 0 30px #e74c3c;}}
+        @keyframes jackpotFlash{0%,100%{background:#f4f4f4;}50%{background:#f1c40f;}}
+        .win-flash{animation:flashGreen 0.8s;}
+        .lose-flash{animation:flashRed 0.8s;}
+        .jackpot-screen{animation:jackpotFlash 1.5s 3;}
+        .error-notice{color:#c00;text-align:center;margin:15px 0;font-weight:bold;}
+        @media (max-width: 800px) {
+            .system-row{flex-wrap:wrap;gap:10px;font-size:14px;justify-content:flex-start;}
+            .roll-group{gap:4px;}
+            .btn-roll, .btn-history, .btn-reset{font-size:12px;padding:5px 8px;}
+            .speed-input{width:60px;}
+            .shared-row{flex-direction:column;gap:8px;}
+            .action-buttons{gap:8px;}
         }
     </style>
 </head>
 <body>
-    <h1>Singapore Toto Number Selector</h1>
-    <p>Enter 6 unique numbers from 1 to 49 in the boxes below, or click the button to auto-fill with the latest Toto winning numbers from Singapore Pools.</p>
-    
-    <div class="input-container">
-        <input type="number" id="num1" min="1" max="49" placeholder="1-49">
-        <input type="number" id="num2" min="1" max="49" placeholder="1-49">
-        <input type="number" id="num3" min="1" max="49" placeholder="1-49">
-        <input type="number" id="num4" min="1" max="49" placeholder="1-49">
-        <input type="number" id="num5" min="1" max="49" placeholder="1-49">
-        <input type="number" id="num6" min="1" max="49" placeholder="1-49">
+    <h1>Singapore Toto Probability Visualizer (STPV)</h1>
+    <div class="subtitle">Simulate Systems 6–12 with 100% accurate Toto rules</div>
+
+    <!-- Winning Numbers Input -->
+    <div class="input-grid">
+        <input type="number" id="num1" min="1" max="49" placeholder="1-49" oninput="validateNoDuplicate()">
+        <input type="number" id="num2" min="1" max="49" placeholder="1-49" oninput="validateNoDuplicate()">
+        <input type="number" id="num3" min="1" max="49" placeholder="1-49" oninput="validateNoDuplicate()">
+        <input type="number" id="num4" min="1" max="49" placeholder="1-49" oninput="validateNoDuplicate()">
+        <input type="number" id="num5" min="1" max="49" placeholder="1-49" oninput="validateNoDuplicate()">
+        <input type="number" id="num6" min="1" max="49" placeholder="1-49" oninput="validateNoDuplicate()">
+        <span class="add-label">+ Additional Number:</span>
+        <input type="number" id="addNum" min="1" max="49" placeholder="1-49" oninput="validateNoDuplicate()">
     </div>
-    
-    <button onclick="fetchLatestToto()">Load Latest Toto Winning Numbers</button>
-    
-    <div id="draw-info"></div>
-    <div id="additional"></div>
-    <div id="error"></div>
+
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+        <a href="https://www.singaporepools.com.sg/en/product/Pages/toto_results.aspx" target="_blank">
+            Click here for latest Toto Result
+        </a>
+        <button onclick="generateRandom()">Generate Random Numbers</button>
+    </div>
+
+    <!-- Prize Pool + Win Tracker -->
+    <div class="prize-pool">
+        <div class="prize-config">
+            <h3>Prize Pool Configuration</h3>
+            <ul class="prize-list">
+                <li class="prize-item">
+                    <span class="prize-label">Group 1 (6 matches)</span>
+                    <input type="number" id="prize1" class="prize-input" value="3000000" min="1000000" max="10000000" oninput="updatePrizes()">
+                </li>
+                <li class="prize-item">
+                    <span class="prize-label">Group 2 (5 + add)</span>
+                    <input type="number" id="prize2" class="prize-input" value="240000.00" min="0" oninput="updatePrizes()">
+                </li>
+                <li class="prize-item">
+                    <span class="prize-label">Group 3 (5 matches)</span>
+                    <input type="number" id="prize3" class="prize-input" value="165000.00" min="0" oninput="updatePrizes()">
+                </li>
+                <li class="prize-item">
+                    <span class="prize-label">Group 4 (4 + add)</span>
+                    <input type="number" id="prize4" class="prize-input" value="90000.00" min="0" oninput="updatePrizes()">
+                </li>
+                <li class="prize-item">
+                    <span class="prize-label">Group 5 (4 matches)</span>
+                    <input type="number" id="prize5" class="prize-input" value="50" disabled>
+                </li>
+                <li class="prize-item">
+                    <span class="prize-label">Group 6 (3 + add)</span>
+                    <input type="number" id="prize6" class="prize-input" value="25" disabled>
+                </li>
+                <li class="prize-item">
+                    <span class="prize-label">Group 7 (3 matches)</span>
+                    <input type="number" id="prize7" class="prize-input" value="10" disabled>
+                </li>
+            </ul>
+            <button class="btn-prize-random" onclick="generateRandomPrizePool()">
+                Random Prize Pool (SG Pools Style)
+            </button>
+        </div>
+        <div class="win-tracker">
+            <h3>Times Won</h3>
+            <ul class="win-list">
+                <li class="win-item" id="winItem1"><span class="win-label">Group 1</span><span class="win-count" id="win1">0</span></li>
+                <li class="win-item" id="winItem2"><span class="win-label">Group 2</span><span class="win-count" id="win2">0</span></li>
+                <li class="win-item" id="winItem3"><span class="win-label">Group 3</span><span class="win-count" id="win3">0</span></li>
+                <li class="win-item" id="winItem4"><span class="win-label">Group 4</span><span class="win-count" id="win4">0</span></li>
+                <li class="win-item" id="winItem5"><span class="win-label">Group 5</span><span class="win-count" id="win5">0</span></li>
+                <li class="win-item" id="winItem6"><span class="win-label">Group 6</span><span class="win-count" id="win6">0</span></li>
+                <li class="win-item" id="winItem7"><span class="win-label">Group 7</span><span class="win-count" id="win7">0</span></li>
+            </ul>
+            <div style="margin-top:15px;text-align:center;font-size:14px;">
+                <strong>Times Played:</strong> <span id="timesPlayed">0</span>
+            </div>
+
+            <!-- SHARED WINNINGS -->
+            <div class="shared-winnings">
+                <p>Winning Group 2, 3 and 4 winnings may seem big because you're the only person winning. Here's how you can share the winning profit.</p>
+                <div class="shared-row">
+                    <div class="shared-group">
+                        <strong>Group 2:</strong> $<span id="g2-prize">240000.00</span> / <input type="number" id="g2-winners" value="1" min="1" oninput="updateShared()"> → <span class="actual">$<span id="g2-actual">240000.00</span></span>
+                    </div>
+                    <div class="shared-group">
+                        <strong>Group 3:</strong> $<span id="g3-prize">165000.00</span> / <input type="number" id="g3-winners" value="1" min="1" oninput="updateShared()"> → <span class="actual">$<span id="g3-actual">165000.00</span></span>
+                    </div>
+                    <div class="shared-group">
+                        <strong>Group 4:</strong> $<span id="g4-prize">90000.00</span> / <input type="number" id="g4-winners" value="1" min="1" oninput="updateShared()"> → <span class="actual">$<span id="g4-actual">90000.00</span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="notice" class="error-notice" style="display:none;"></div>
+    <div class="global-stats">
+        <div class="stat-item">
+            <span class="stats-label">Total Profit</span><br>
+            <span class="stats-value" id="totalProfit">0</span>
+        </div>
+        <div class="stat-item">
+            <span class="stats-label">Total Loss</span><br>
+            <span class="stats-value" id="totalLoss">0</span>
+        </div>
+    </div>
+
+    <div id="systemGrid"></div>
+
+    <div id="historyModal" class="modal" onclick="closeHistoryOnClickOutside(event)">
+        <div class="modal-content" onclick="event.stopPropagation();">
+            <span class="close" onclick="closeHistory()">x</span>
+            <h2 id="modalTitle">History</h2>
+            <div class="sort-btn">
+                <button onclick="sortHistory('desc')">Profit Descending</button>
+                <button onclick="sortHistory('asc')">Profit Ascending</button>
+            </div>
+            <div id="historyList"></div>
+        </div>
+    </div>
 
     <script>
-        async function fetchLatestToto() {
-            const url = 'https://www.singaporepools.com.sg/en/product/sr/Pages/toto_results.aspx';
-            const proxy = 'https://cors-anywhere.herokuapp.com/'; // Use this proxy to bypass CORS (visit the proxy URL first to activate if needed)
-            const errorDiv = document.getElementById('error');
-            const drawInfo = document.getElementById('draw-info');
-            const additionalDiv = document.getElementById('additional');
-            
-            errorDiv.textContent = '';
-            drawInfo.textContent = '';
-            additionalDiv.textContent = '';
+        const systemCosts = {6:1,7:7,8:28,9:84,10:210,11:462,12:924};
+        let prizeTiers = [
+            {match:6, add:false, prize:3000000},
+            {match:5, add:true, prize:240000},
+            {match:5, add:false, prize:165000},
+            {match:4, add:true, prize:90000},
+            {match:4, add:false, prize:50},
+            {match:3, add:true, prize:25},
+            {match:3, add:false, prize:10}
+        ];
+        const winCounts = [0,0,0,0,0,0,0,0];
+        let timesPlayed = 0;
+        let latestWinning = null;
+        const systems = {};
+        const systemGrid = document.getElementById('systemGrid');
+        const notice = document.getElementById('notice');
 
-            try {
-                const response = await fetch(proxy + url);
-                if (!response.ok) throw new Error('Network response was not ok');
-                
-                const html = await response.text();
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
-                
-                // Get all <p> elements
-                const ps = Array.from(doc.querySelectorAll('p'));
-                
-                // Extract draw info (assuming first few <p> are date and draw no)
-                const drawDate = ps[0] ? ps[0].textContent.trim() : 'N/A';
-                const drawNo = ps[1] ? ps[1].textContent.trim() : 'N/A';
-                
-                // Find the winning numbers table: Look for the table with <th> containing 'Winning Numbers'
-                let winningTable = Array.from(doc.querySelectorAll('table')).find(table => {
-                    const th = table.querySelector('th');
-                    return th && th.textContent.trim() === 'Winning Numbers';
-                });
-                
-                let winningNums = [];
-                if (winningTable) {
-                    winningNums = Array.from(winningTable.querySelectorAll('td')).map(td => td.textContent.trim());
-                }
-                
-                if (winningNums.length !== 6) {
-                    throw new Error('Unable to parse winning numbers');
-                }
-                
-                // Extract additional number (assuming next <p> after draw info)
-                const additionalLabel = ps[2] ? ps[2].textContent.trim() : '';
-                const additional = ps[3] ? ps[3].textContent.trim() : 'N/A';
-                
-                // Populate inputs
-                document.getElementById('num1').value = winningNums[0];
-                document.getElementById('num2').value = winningNums[1];
-                document.getElementById('num3').value = winningNums[2];
-                document.getElementById('num4').value = winningNums[3];
-                document.getElementById('num5').value = winningNums[4];
-                document.getElementById('num6').value = winningNums[5];
-                
-                // Display info
-                drawInfo.textContent = `${drawNo} - ${drawDate}`;
-                if (additionalLabel.includes('Additional')) {
-                    additionalDiv.textContent = `Additional Number: ${additional}`;
-                }
-                
-            } catch (error) {
-                errorDiv.textContent = `Error fetching data: ${error.message}. Note: You may need to visit https://cors-anywhere.herokuapp.com/ first to enable the proxy, or host this page on a server.`;
+        function updatePrizes() {
+            const jackpot = parseFloat(document.getElementById('prize1').value) || 3000000;
+            const p2 = parseFloat(document.getElementById('prize2').value) || 0;
+            const p3 = parseFloat(document.getElementById('prize3').value) || 0;
+            const p4 = parseFloat(document.getElementById('prize4').value) || 0;
+
+            prizeTiers = [
+                {match:6, add:false, prize:jackpot},
+                {match:5, add:true, prize:p2},
+                {match:5, add:false, prize:p3},
+                {match:4, add:true, prize:p4},
+                {match:4, add:false, prize:50},
+                {match:3, add:true, prize:25},
+                {match:3, add:false, prize:10}
+            ];
+
+            document.getElementById('g2-prize').textContent = p2.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('g3-prize').textContent = p3.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('g4-prize').textContent = p4.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            updateShared();
+        }
+
+        function generateRandomPrizePool() {
+            const min = 1000000;
+            const max = 10000000;
+            const jackpot = Math.floor(Math.random() * (max - min + 1)) + min;
+            const g2 = jackpot * 0.08;
+            const g3 = jackpot * 0.055;
+            const g4 = jackpot * 0.03;
+
+            document.getElementById('prize1').value = jackpot;
+            document.getElementById('prize2').value = g2.toFixed(2);
+            document.getElementById('prize3').value = g3.toFixed(2);
+            document.getElementById('prize4').value = g4.toFixed(2);
+
+            updatePrizes();
+            showNotice(`Random Prize Pool Generated! Group 1: $${jackpot.toLocaleString()}`);
+            setTimeout(() => notice.style.display = "none", 3000);
+        }
+
+        function updateShared() {
+            const g2p = parseFloat(document.getElementById('g2-prize').textContent.replace(/,/g, '')) || 0;
+            const g3p = parseFloat(document.getElementById('g3-prize').textContent.replace(/,/g, '')) || 0;
+            const g4p = parseFloat(document.getElementById('g4-prize').textContent.replace(/,/g, '')) || 0;
+
+            const g2w = parseInt(document.getElementById('g2-winners').value) || 1;
+            const g3w = parseInt(document.getElementById('g3-winners').value) || 1;
+            const g4w = parseInt(document.getElementById('g4-winners').value) || 1;
+
+            document.getElementById('g2-actual').textContent = (g2p / g2w).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('g3-actual').textContent = (g3p / g3w).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('g4-actual').textContent = (g4p / g4w).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        }
+
+        function updateWinDisplay() {
+            for (let i = 1; i <= 7; i++) {
+                const count = winCounts[i];
+                const item = document.getElementById(`winItem${i}`);
+                const countEl = document.getElementById(`win${i}`);
+                countEl.textContent = count;
+                if (count > 0) item.classList.add('visible');
+                else item.classList.remove('visible');
+            }
+            document.getElementById('timesPlayed').textContent = timesPlayed;
+        }
+
+        function validateNoDuplicate() {
+            const values = [];
+            let hasDup = false;
+            for (let i = 1; i <= 6; i++) {
+                const val = document.getElementById(`num${i}`).value;
+                if (val && values.includes(val)) hasDup = true;
+                if (val) values.push(val);
+            }
+            const add = document.getElementById('addNum').value;
+            if (add && values.includes(add)) hasDup = true;
+            notice.style.display = hasDup ? "block" : "none";
+            if (hasDup) notice.textContent = "Duplicate numbers not allowed!";
+        }
+
+        function initSystems() {
+            for (let sys = 6; sys <= 12; sys++) {
+                const row = document.createElement('div');
+                row.className = 'system-row';
+                row.id = `row${sys}`;
+                row.innerHTML = `
+                    <div class="system-name">System ${sys}</div>
+                    <div class="spend">Spend $<span id="spend${sys}">0</span></div>
+                    <div class="profit-stat" id="profit${sys}">Profit $0</div>
+                    <div class="roll-group">
+                        <button class="btn-roll" id="rollBtn${sys}" onclick="handleRoll(${sys})">Roll</button>
+                        <label><input type="checkbox" id="autoCheck${sys}" class="auto-checkbox"> Auto</label>
+                        <input type="number" id="speed${sys}" value="1000" min="100" step="100" class="speed-input">ms
+                    </div>
+                    <button class="btn-history" onclick="openHistory(${sys})">History</button>
+                    <button class="btn-reset" onclick="resetSystem(${sys})">Reset</button>
+                `;
+                systemGrid.appendChild(row);
+                systems[sys] = { spend:0, profit:0, auto:false, interval:null, history:[], jackpotWon:false };
             }
         }
+
+        function handleRoll(sys) {
+            const auto = document.getElementById(`autoCheck${sys}`).checked;
+            const btn = document.getElementById(`rollBtn${sys}`);
+            if (auto && !systems[sys].auto) {
+                startAuto(sys);
+                btn.textContent = 'Stop';
+                btn.classList.add('btn-stop');
+            } else if (auto && systems[sys].auto) {
+                stopAuto(sys);
+                btn.textContent = 'Roll';
+                btn.classList.remove('btn-stop');
+            } else {
+                rollOnce(sys);
+            }
+        }
+
+        function rollOnce(sys) {
+            if (!latestWinning) {
+                showNotice("Please click 'Generate Random Numbers' first!");
+                return;
+            }
+            timesPlayed++;
+            const pool = generateSystemNumbers(sys);
+            const combos = getCombinations(pool, 6);
+            const cost = combos.length;
+            const s = systems[sys];
+            s.spend += cost;
+            let prize = 0;
+            const groupHits = {};
+            combos.forEach(c => {
+                const mainMatches = c.filter(n => latestWinning.main.includes(n)).length;
+                const hasAdd = c.includes(latestWinning.additional);
+                for (let i = 0; i < prizeTiers.length; i++) {
+                    const tier = prizeTiers[i];
+                    if (mainMatches === tier.match && hasAdd === tier.add) {
+                        prize += tier.prize;
+                        const group = i + 1;
+                        groupHits[group] = (groupHits[group] || 0) + 1;
+                        break;
+                    }
+                }
+            });
+            Object.keys(groupHits).forEach(g => winCounts[g]++);
+            const net = prize - cost;
+            s.profit += net;
+
+            // JACKPOT = ANY 6-match combo wins FULL Group 1 prize
+            const jackpot = groupHits[1] > 0;
+            if (jackpot) {
+                s.jackpotWon = true;
+                stopAuto(sys);
+                document.getElementById(`rollBtn${sys}`).textContent = 'Roll';
+                document.getElementById(`rollBtn${sys}`).classList.remove('btn-stop');
+                document.body.classList.add('jackpot-screen');
+                setTimeout(() => document.body.classList.remove('jackpot-screen'), 4500);
+            }
+
+            const wonGroups = Object.entries(groupHits)
+                .map(([g, cnt]) => `Group ${g} × ${cnt}`)
+                .join(', ') || 'None';
+            s.history.unshift({ cost, prize, profit: net, pool: [...pool], jackpot, groups: wonGroups });
+            updateSystemStats(sys);
+            updateWinDisplay();
+            updateGlobalStats();
+            const row = document.getElementById(`row${sys}`);
+            row.classList.remove('win-flash','lose-flash');
+            if (jackpot) {
+                row.style.border = '3px solid gold';
+                row.style.boxShadow = '0 0 40px gold';
+            } else if (net > 0) {
+                row.classList.add('win-flash');
+            } else {
+                row.classList.add('lose-flash');
+            }
+        }
+
+        function updateSystemStats(sys) {
+            const s = systems[sys];
+            document.getElementById(`spend${sys}`).textContent = s.spend;
+            const profitEl = document.getElementById(`profit${sys}`);
+            const profit = s.profit;
+            if (profit >= 0) {
+                profitEl.textContent = `Profit $${profit}`;
+                profitEl.className = 'profit-stat positive';
+            } else {
+                profitEl.textContent = `Loss $${-profit}`;
+                profitEl.className = 'profit-stat negative';
+            }
+        }
+
+        function startAuto(sys) {
+            if (systems[sys].auto) return;
+            systems[sys].auto = true;
+            const speed = parseInt(document.getElementById(`speed${sys}`).value) || 1000;
+            systems[sys].interval = setInterval(() => {
+                if (!systems[sys].jackpotWon) rollOnce(sys);
+                else stopAuto(sys);
+            }, speed);
+        }
+
+        function stopAuto(sys) {
+            if (!systems[sys].auto) return;
+            clearInterval(systems[sys].interval);
+            systems[sys].auto = false;
+        }
+
+        function resetSystem(sys) {
+            const s = systems[sys];
+            s.spend = s.profit = 0;
+            s.history = [];
+            s.jackpotWon = false;
+            stopAuto(sys);
+            document.getElementById(`rollBtn${sys}`).textContent = 'Roll';
+            document.getElementById(`rollBtn${sys}`).classList.remove('btn-stop');
+            document.getElementById(`autoCheck${sys}`).checked = false;
+            updateSystemStats(sys);
+            const row = document.getElementById(`row${sys}`);
+            row.style.border = ''; row.style.boxShadow = '';
+            updateGlobalStats();
+        }
+
+        let currentSys = null;
+        function openHistory(sys) {
+            currentSys = sys;
+            document.getElementById('modalTitle').textContent = `System ${sys} - Roll History`;
+            renderHistory(sys);
+            document.getElementById('historyModal').style.display = 'flex';
+        }
+
+        function closeHistory() { document.getElementById('historyModal').style.display = 'none'; }
+        function closeHistoryOnClickOutside(e) { if (e.target === document.getElementById('historyModal')) closeHistory(); }
+
+        function renderHistory(sys) {
+            const list = document.getElementById('historyList');
+            list.innerHTML = '';
+            systems[sys].history.forEach(entry => {
+                const div = document.createElement('div');
+                div.className = `history-entry ${entry.profit > 0 ? 'win' : ''}`;
+                const jackpot = entry.jackpot ? ' <span class="jackpot">JACKPOT!</span>' : '';
+                const nums = entry.pool.map(n => {
+                    if (latestWinning.main.includes(n)) return `<span class="match">${n}</span>`;
+                    if (n === latestWinning.additional) return `<span class="additional">${n}*</span>`;
+                    return n;
+                }).join(', ');
+                div.innerHTML = `
+                    <strong>Prize: $${entry.prize.toLocaleString()} | ${entry.profit >= 0 ? 'Profit' : 'Loss'}: $${Math.abs(entry.profit).toLocaleString()}${jackpot}</strong>
+                    <div class="group-win">Won: ${entry.groups}</div>
+                    <div style="font-size:12px;opacity:0.8;">[${nums}]</div>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        function sortHistory(order) {
+            if (!currentSys) return;
+            const s = systems[currentSys];
+            s.history.sort((a,b) => order === 'desc' ? b.profit - a.profit : a.profit - b.profit);
+            renderHistory(currentSys);
+        }
+
+        function setWinningNumbers() {
+            const nums = [];
+            for (let i = 1; i <= 6; i++) {
+                const val = document.getElementById(`num${i}`).value.trim();
+                if (!val || isNaN(val) || val < 1 || val > 49) {
+                    showNotice("Please fill all 6 winning numbers (1-49).");
+                    return false;
+                }
+                if (nums.includes(Number(val))) {
+                    showNotice("Duplicate numbers not allowed!");
+                    return false;
+                }
+                nums.push(Number(val));
+            }
+            const add = document.getElementById('addNum').value.trim();
+            if (!add || isNaN(add) || add < 1 || add > 49) {
+                showNotice("Please enter valid Additional Number (1-49).");
+                return false;
+            }
+            if (nums.includes(Number(add))) {
+                showNotice("Additional number cannot be one of the main numbers!");
+                return false;
+            }
+            latestWinning = { main: nums, additional: Number(add) };
+            updatePrizes();
+            winCounts.fill(0, 1, 8);
+            timesPlayed = 0;
+            document.getElementById('g2-winners').value = 1;
+            document.getElementById('g3-winners').value = 1;
+            document.getElementById('g4-winners').value = 1;
+            updateShared();
+            updateWinDisplay();
+            notice.style.display = "none";
+            return true;
+        }
+
+        function showNotice(msg) {
+            notice.textContent = msg;
+            notice.style.display = "block";
+        }
+
+        function generateRandom() {
+            const nums = [];
+            while (nums.length < 6) {
+                const n = Math.floor(Math.random() * 49) + 1;
+                if (!nums.includes(n)) nums.push(n);
+            }
+            nums.sort((a,b)=>a-b);
+            const add = Math.floor(Math.random() * 49) + 1;
+            for (let i = 1; i <= 6; i++) document.getElementById(`num${i}`).value = nums[i-1];
+            document.getElementById('addNum').value = add;
+            setWinningNumbers();
+        }
+
+        function generateSystemNumbers(n) {
+            const nums = [];
+            while (nums.length < n) {
+                const r = Math.floor(Math.random() * 49) + 1;
+                if (!nums.includes(r)) nums.push(r);
+            }
+            return nums.sort((a,b)=>a-b);
+        }
+
+        function getCombinations(arr, k) {
+            const result = [];
+            function combine(start, chosen) {
+                if (chosen.length === k) { result.push([...chosen]); return; }
+                for (let i = start; i < arr.length; i++) {
+                    chosen.push(arr[i]);
+                    combine(i + 1, chosen);
+                    chosen.pop();
+                }
+            }
+            combine(0, []);
+            return result;
+        }
+
+        function updateGlobalStats() {
+            let profit = 0, loss = 0;
+            for (let sys = 6; sys <= 12; sys++) {
+                const s = systems[sys];
+                profit += s.profit;
+                if (s.profit < 0) loss -= s.profit;
+            }
+            document.getElementById('totalProfit').textContent = profit;
+            document.getElementById('totalLoss').textContent = loss;
+        }
+
+        // INIT
+        initSystems();
+        updatePrizes();
+        updateShared();
     </script>
 </body>
 </html>
