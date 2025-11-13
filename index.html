@@ -5,9 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Singapore Toto Probability Visualizer (STPV)</title>
     <style>
-        body{font-family:Arial,sans-serif;max-width:900px;margin:0 auto;padding:20px;background:#f4f4f4;color:#333;transition:background 0.5s;}
+        body{font-family:Arial,sans-serif;max-width:900px;margin:0 auto;padding:20px;background:#f4f4f4;color:#333;}
         h1{text-align:center;color:#1a5fb4;margin-bottom:10px;}
-        .subtitle{text-align:center;font-size:14px;color:#555;margin-bottom:20px;}
         .input-grid{display:flex;justify-content:center;gap:8px;margin:20px 0;flex-wrap:wrap;align-items:center;}
         input[type=number]{width:58px;padding:10px;font-size:18px;text-align:center;border:1px solid #ddd;border-radius:4px;}
         .add-label{margin-left:10px;font-weight:bold;color:#2980b9;}
@@ -111,21 +110,73 @@
         .lose-flash{animation:flashRed 0.8s;}
         .jackpot-screen{animation:jackpotFlash 1.5s 3;}
         .error-notice{color:#c00;text-align:center;margin:15px 0;font-weight:bold;}
-        @media (max-width: 800px) {
-            .system-row{flex-wrap:wrap;gap:10px;font-size:14px;justify-content:flex-start;}
-            .roll-group{gap:4px;}
-            .btn-roll, .btn-history, .btn-reset{font-size:12px;padding:5px 8px;}
-            .speed-input{width:60px;}
-            .shared-row{flex-direction:column;gap:8px;}
-            .action-buttons{gap:8px;}
+
+        /* CHART WITH TOP & BOTTOM 6 */
+        .chart-container{
+            margin:30px auto 0;padding:20px;background:#fff;border-radius:10px;
+            box-shadow:0 4px 12px rgba(0,0,0,0.1);max-width:860px;
         }
+        .chart-title{
+            text-align:center;font-size:18px;font-weight:bold;color:#1a5fb4;margin-bottom:6px;
+        }
+        .freq-summary{
+            text-align:center;margin-bottom:12px;font-size:14px;
+        }
+        .freq-most{color:#27ae60;font-weight:bold;}
+        .freq-least{color:#e74c3c;font-weight:bold;}
+
+        .chart-wrapper{
+            position:relative;height:320px;overflow-x:auto;overflow-y:hidden;
+            border:1px solid #eee;border-radius:6px;background:#fff;
+            padding:30px 10px 50px 10px;
+        }
+        .chart-bars{
+            display:flex;align-items:flex-end;height:100%;gap:1px;
+            justify-content:space-between;position:relative;
+            width:100%;
+        }
+        .bar-container{
+            flex:1;display:flex;flex-direction:column;align-items:center;
+            position:relative;min-width:14px;
+        }
+        .bar{
+            width:100%;background:#3498db;height:0px;
+            border-radius:3px 3px 0 0;transition:height 0.2s ease;
+            position:relative; z-index:1;
+        }
+        .bar.top{background:#27ae60 !important;}
+        .bar.top:hover{background:#1e8449 !important;}
+        .bar.bottom{background:#e74c3c !important;}
+        .bar.bottom:hover{background:#c0392b !important;}
+        .bar:hover:not(.top):not(.bottom){background:#2980b9;}
+
+        .bar-count{
+            position:absolute;left:50%; transform:translateX(-50%) rotate(-90deg);
+            font-size:10px; font-weight:bold; color:#fff;
+            text-shadow:0 0 3px rgba(0,0,0,0.6);
+            white-space:nowrap; z-index:2;
+            opacity:0; transition:opacity 0.3s;
+            top:50%; transform:translate(-50%, -50%) rotate(-90deg);
+            transform-origin:center;
+        }
+        .bar-count.visible{opacity:1;}
+        .bar-label{
+            margin-top:8px;font-size:11px;color:#333;font-weight:bold;z-index:3;
+        }
+        .chart-reset{
+            text-align:center;margin-top:12px;
+        }
+        .chart-reset button{
+            padding:8px 18px;background:#9b59b6;color:#fff;border:none;
+            border-radius:4px;cursor:pointer;font-size:13px;font-weight:bold;
+        }
+        .chart-reset button:hover{background:#8e44ad;}
     </style>
 </head>
 <body>
     <h1>Singapore Toto Probability Visualizer (STPV)</h1>
-    <div class="subtitle">Simulate Systems 6–12 with 100% accurate Toto rules</div>
 
-    <!-- Winning Numbers Input -->
+    <!-- Winning Numbers -->
     <div class="input-grid">
         <input type="number" id="num1" min="1" max="49" placeholder="1-49" oninput="validateNoDuplicate()">
         <input type="number" id="num2" min="1" max="49" placeholder="1-49" oninput="validateNoDuplicate()">
@@ -136,8 +187,6 @@
         <span class="add-label">+ Additional Number:</span>
         <input type="number" id="addNum" min="1" max="49" placeholder="1-49" oninput="validateNoDuplicate()">
     </div>
-
-    <!-- Action Buttons -->
     <div class="action-buttons">
         <a href="https://www.singaporepools.com.sg/en/product/Pages/toto_results.aspx" target="_blank">
             Click here for latest Toto Result
@@ -150,38 +199,15 @@
         <div class="prize-config">
             <h3>Prize Pool Configuration</h3>
             <ul class="prize-list">
-                <li class="prize-item">
-                    <span class="prize-label">Group 1 (6 matches)</span>
-                    <input type="number" id="prize1" class="prize-input" value="3000000" min="1000000" max="10000000" oninput="updatePrizes()">
-                </li>
-                <li class="prize-item">
-                    <span class="prize-label">Group 2 (5 + add)</span>
-                    <input type="number" id="prize2" class="prize-input" value="240000.00" min="0" oninput="updatePrizes()">
-                </li>
-                <li class="prize-item">
-                    <span class="prize-label">Group 3 (5 matches)</span>
-                    <input type="number" id="prize3" class="prize-input" value="165000.00" min="0" oninput="updatePrizes()">
-                </li>
-                <li class="prize-item">
-                    <span class="prize-label">Group 4 (4 + add)</span>
-                    <input type="number" id="prize4" class="prize-input" value="90000.00" min="0" oninput="updatePrizes()">
-                </li>
-                <li class="prize-item">
-                    <span class="prize-label">Group 5 (4 matches)</span>
-                    <input type="number" id="prize5" class="prize-input" value="50" disabled>
-                </li>
-                <li class="prize-item">
-                    <span class="prize-label">Group 6 (3 + add)</span>
-                    <input type="number" id="prize6" class="prize-input" value="25" disabled>
-                </li>
-                <li class="prize-item">
-                    <span class="prize-label">Group 7 (3 matches)</span>
-                    <input type="number" id="prize7" class="prize-input" value="10" disabled>
-                </li>
+                <li class="prize-item"><span class="prize-label">Group 1 (6 matches)</span><input type="number" id="prize1" class="prize-input" value="3000000" min="1000000" max="10000000" oninput="updatePrizes()"></li>
+                <li class="prize-item"><span class="prize-label">Group 2 (5 + add)</span><input type="number" id="prize2" class="prize-input" value="240000.00" min="0" oninput="updatePrizes()"></li>
+                <li class="prize-item"><span class="prize-label">Group 3 (5 matches)</span><input type="number" id="prize3" class="prize-input" value="165000.00" min="0" oninput="updatePrizes()"></li>
+                <li class="prize-item"><span class="prize-label">Group 4 (4 + add)</span><input type="number" id="prize4" class="prize-input" value="90000.00" min="0" oninput="updatePrizes()"></li>
+                <li class="prize-item"><span class="prize-label">Group 5 (4 matches)</span><input type="number" id="prize5" class="prize-input" value="50" disabled></li>
+                <li class="prize-item"><span class="prize-label">Group 6 (3 + add)</span><input type="number" id="prize6" class="prize-input" value="25" disabled></li>
+                <li class="prize-item"><span class="prize-label">Group 7 (3 matches)</span><input type="number" id="prize7" class="prize-input" value="10" disabled></li>
             </ul>
-            <button class="btn-prize-random" onclick="generateRandomPrizePool()">
-                Random Prize Pool (SG Pools Style)
-            </button>
+            <button class="btn-prize-random" onclick="generateRandomPrizePool()">Random Prize Pool (SG Pools Style)</button>
         </div>
         <div class="win-tracker">
             <h3>Times Won</h3>
@@ -194,42 +220,42 @@
                 <li class="win-item" id="winItem6"><span class="win-label">Group 6</span><span class="win-count" id="win6">0</span></li>
                 <li class="win-item" id="winItem7"><span class="win-label">Group 7</span><span class="win-count" id="win7">0</span></li>
             </ul>
-            <div style="margin-top:15px;text-align:center;font-size:14px;">
-                <strong>Times Played:</strong> <span id="timesPlayed">0</span>
-            </div>
-
-            <!-- SHARED WINNINGS -->
+            <div style="margin-top:15px;text-align:center;font-size:14px;"><strong>Times Played:</strong> <span id="timesPlayed">0</span></div>
             <div class="shared-winnings">
                 <p>Winning Group 2, 3 and 4 winnings may seem big because you're the only person winning. Here's how you can share the winning profit.</p>
                 <div class="shared-row">
-                    <div class="shared-group">
-                        <strong>Group 2:</strong> $<span id="g2-prize">240000.00</span> / <input type="number" id="g2-winners" value="1" min="1" oninput="updateShared()"> → <span class="actual">$<span id="g2-actual">240000.00</span></span>
-                    </div>
-                    <div class="shared-group">
-                        <strong>Group 3:</strong> $<span id="g3-prize">165000.00</span> / <input type="number" id="g3-winners" value="1" min="1" oninput="updateShared()"> → <span class="actual">$<span id="g3-actual">165000.00</span></span>
-                    </div>
-                    <div class="shared-group">
-                        <strong>Group 4:</strong> $<span id="g4-prize">90000.00</span> / <input type="number" id="g4-winners" value="1" min="1" oninput="updateShared()"> → <span class="actual">$<span id="g4-actual">90000.00</span></span>
-                    </div>
+                    <div class="shared-group"><strong>Group 2:</strong> $<span id="g2-prize">240000.00</span> / <input type="number" id="g2-winners" value="1" min="1" oninput="updateShared()"> to <span class="actual">$<span id="g2-actual">240000.00</span></span></div>
+                    <div class="shared-group"><strong>Group 3:</strong> $<span id="g3-prize">165000.00</span> / <input type="number" id="g3-winners" value="1" min="1" oninput="updateShared()"> to <span class="actual">$<span id="g3-actual">165000.00</span></span></div>
+                    <div class="shared-group"><strong>Group 4:</strong> $<span id="g4-prize">90000.00</span> / <input type="number" id="g4-winners" value="1" min="1" oninput="updateShared()"> to <span class="actual">$<span id="g4-actual">90000.00</span></span></div>
                 </div>
             </div>
         </div>
     </div>
 
     <div id="notice" class="error-notice" style="display:none;"></div>
+
     <div class="global-stats">
-        <div class="stat-item">
-            <span class="stats-label">Total Profit</span><br>
-            <span class="stats-value" id="totalProfit">0</span>
-        </div>
-        <div class="stat-item">
-            <span class="stats-label">Total Loss</span><br>
-            <span class="stats-value" id="totalLoss">0</span>
-        </div>
+        <div class="stat-item"><span class="stats-label">Total Profit</span><br><span class="stats-value" id="totalProfit">0</span></div>
+        <div class="stat-item"><span class="stats-label">Total Loss</span><br><span class="stats-value" id="totalLoss">0</span></div>
     </div>
 
+    <!-- SYSTEM 6–12 ROWS -->
     <div id="systemGrid"></div>
 
+    <!-- CHART WITH TOP & BOTTOM 6 -->
+    <div class="chart-container">
+        <div class="chart-title">Number Roll Frequency</div>
+        <div class="freq-summary">
+            <div><span class="freq-most" id="mostFreq">6 Most Frequent Numbers: -</span></div>
+            <div><span class="freq-least" id="leastFreq">6 Least Frequent Numbers: -</span></div>
+        </div>
+        <div class="chart-wrapper">
+            <div class="chart-bars" id="chartBars"></div>
+        </div>
+        <div class="chart-reset"><button onclick="resetChart()">Reset Chart</button></div>
+    </div>
+
+    <!-- History Modal -->
     <div id="historyModal" class="modal" onclick="closeHistoryOnClickOutside(event)">
         <div class="modal-content" onclick="event.stopPropagation();">
             <span class="close" onclick="closeHistory()">x</span>
@@ -260,12 +286,18 @@
         const systemGrid = document.getElementById('systemGrid');
         const notice = document.getElementById('notice');
 
+        // DYNAMIC SCALING
+        const numberFrequency = Array(50).fill(0);
+        let scaleFactor = 1;
+        const MAX_HEIGHT_PX = 280;
+        const PX_PER_ROLL = 2;
+        const MIN_SHOW_LABEL = 10;
+
         function updatePrizes() {
             const jackpot = parseFloat(document.getElementById('prize1').value) || 3000000;
             const p2 = parseFloat(document.getElementById('prize2').value) || 0;
             const p3 = parseFloat(document.getElementById('prize3').value) || 0;
             const p4 = parseFloat(document.getElementById('prize4').value) || 0;
-
             prizeTiers = [
                 {match:6, add:false, prize:jackpot},
                 {match:5, add:true, prize:p2},
@@ -275,7 +307,6 @@
                 {match:3, add:true, prize:25},
                 {match:3, add:false, prize:10}
             ];
-
             document.getElementById('g2-prize').textContent = p2.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
             document.getElementById('g3-prize').textContent = p3.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
             document.getElementById('g4-prize').textContent = p4.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
@@ -283,18 +314,13 @@
         }
 
         function generateRandomPrizePool() {
-            const min = 1000000;
-            const max = 10000000;
+            const min = 1000000, max = 10000000;
             const jackpot = Math.floor(Math.random() * (max - min + 1)) + min;
-            const g2 = jackpot * 0.08;
-            const g3 = jackpot * 0.055;
-            const g4 = jackpot * 0.03;
-
+            const g2 = jackpot * 0.08, g3 = jackpot * 0.055, g4 = jackpot * 0.03;
             document.getElementById('prize1').value = jackpot;
             document.getElementById('prize2').value = g2.toFixed(2);
             document.getElementById('prize3').value = g3.toFixed(2);
             document.getElementById('prize4').value = g4.toFixed(2);
-
             updatePrizes();
             showNotice(`Random Prize Pool Generated! Group 1: $${jackpot.toLocaleString()}`);
             setTimeout(() => notice.style.display = "none", 3000);
@@ -304,11 +330,9 @@
             const g2p = parseFloat(document.getElementById('g2-prize').textContent.replace(/,/g, '')) || 0;
             const g3p = parseFloat(document.getElementById('g3-prize').textContent.replace(/,/g, '')) || 0;
             const g4p = parseFloat(document.getElementById('g4-prize').textContent.replace(/,/g, '')) || 0;
-
             const g2w = parseInt(document.getElementById('g2-winners').value) || 1;
             const g3w = parseInt(document.getElementById('g3-winners').value) || 1;
             const g4w = parseInt(document.getElementById('g4-winners').value) || 1;
-
             document.getElementById('g2-actual').textContent = (g2p / g2w).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
             document.getElementById('g3-actual').textContent = (g3p / g3w).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
             document.getElementById('g4-actual').textContent = (g4p / g4w).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
@@ -320,8 +344,7 @@
                 const item = document.getElementById(`winItem${i}`);
                 const countEl = document.getElementById(`win${i}`);
                 countEl.textContent = count;
-                if (count > 0) item.classList.add('visible');
-                else item.classList.remove('visible');
+                item.classList.toggle('visible', count > 0);
             }
             document.getElementById('timesPlayed').textContent = timesPlayed;
         }
@@ -360,29 +383,23 @@
                 systemGrid.appendChild(row);
                 systems[sys] = { spend:0, profit:0, auto:false, interval:null, history:[], jackpotWon:false };
             }
+            initChart();
         }
 
         function handleRoll(sys) {
             const auto = document.getElementById(`autoCheck${sys}`).checked;
             const btn = document.getElementById(`rollBtn${sys}`);
             if (auto && !systems[sys].auto) {
-                startAuto(sys);
-                btn.textContent = 'Stop';
-                btn.classList.add('btn-stop');
+                startAuto(sys); btn.textContent = 'Stop'; btn.classList.add('btn-stop');
             } else if (auto && systems[sys].auto) {
-                stopAuto(sys);
-                btn.textContent = 'Roll';
-                btn.classList.remove('btn-stop');
+                stopAuto(sys); btn.textContent = 'Roll'; btn.classList.remove('btn-stop');
             } else {
                 rollOnce(sys);
             }
         }
 
         function rollOnce(sys) {
-            if (!latestWinning) {
-                showNotice("Please click 'Generate Random Numbers' first!");
-                return;
-            }
+            if (!latestWinning) { showNotice("Generate winning numbers first!"); return; }
             timesPlayed++;
             const pool = generateSystemNumbers(sys);
             const combos = getCombinations(pool, 6);
@@ -395,11 +412,11 @@
                 const mainMatches = c.filter(n => latestWinning.main.includes(n)).length;
                 const hasAdd = c.includes(latestWinning.additional);
                 for (let i = 0; i < prizeTiers.length; i++) {
-                    const tier = prizeTiers[i];
-                    if (mainMatches === tier.match && hasAdd === tier.add) {
-                        prize += tier.prize;
-                        const group = i + 1;
-                        groupHits[group] = (groupHits[group] || 0) + 1;
+                    const t = prizeTiers[i];
+                    if (mainMatches === t.match && hasAdd === t.add) {
+                        prize += t.prize;
+                        const g = i + 1;
+                        groupHits[g] = (groupHits[g] || 0) + 1;
                         break;
                     }
                 }
@@ -407,59 +424,41 @@
             Object.keys(groupHits).forEach(g => winCounts[g]++);
             const net = prize - cost;
             s.profit += net;
-
-            // JACKPOT = ANY 6-match combo wins FULL Group 1 prize
             const jackpot = groupHits[1] > 0;
-            if (jackpot) {
-                s.jackpotWon = true;
-                stopAuto(sys);
-                document.getElementById(`rollBtn${sys}`).textContent = 'Roll';
-                document.getElementById(`rollBtn${sys}`).classList.remove('btn-stop');
-                document.body.classList.add('jackpot-screen');
-                setTimeout(() => document.body.classList.remove('jackpot-screen'), 4500);
+            if (jackpot) { s.jackpotWon = true; stopAuto(sys); document.getElementById(`rollBtn${sys}`).textContent = 'Roll'; document.getElementById(`rollBtn${sys}`).classList.remove('btn-stop'); document.body.classList.add('jackpot-screen'); setTimeout(() => document.body.classList.remove('jackpot-screen'), 4500); }
+            s.history.unshift({ cost, prize, profit: net, pool: [...pool], jackpot, groups: Object.entries(groupHits).map(([g,cnt])=>`Group ${g} × ${cnt}`).join(', ') || 'None' });
+
+            pool.forEach(n => numberFrequency[n]++);
+
+            const maxCount = Math.max(...numberFrequency.slice(1));
+            if (maxCount * PX_PER_ROLL * scaleFactor > MAX_HEIGHT_PX) {
+                scaleFactor *= 0.5;
             }
 
-            const wonGroups = Object.entries(groupHits)
-                .map(([g, cnt]) => `Group ${g} × ${cnt}`)
-                .join(', ') || 'None';
-            s.history.unshift({ cost, prize, profit: net, pool: [...pool], jackpot, groups: wonGroups });
+            updateChart();
             updateSystemStats(sys);
             updateWinDisplay();
             updateGlobalStats();
             const row = document.getElementById(`row${sys}`);
             row.classList.remove('win-flash','lose-flash');
-            if (jackpot) {
-                row.style.border = '3px solid gold';
-                row.style.boxShadow = '0 0 40px gold';
-            } else if (net > 0) {
-                row.classList.add('win-flash');
-            } else {
-                row.classList.add('lose-flash');
-            }
+            if (jackpot) { row.style.border = '3px solid gold'; row.style.boxShadow = '0 0 40px gold'; }
+            else if (net > 0) row.classList.add('win-flash');
+            else row.classList.add('lose-flash');
         }
 
         function updateSystemStats(sys) {
             const s = systems[sys];
             document.getElementById(`spend${sys}`).textContent = s.spend;
-            const profitEl = document.getElementById(`profit${sys}`);
-            const profit = s.profit;
-            if (profit >= 0) {
-                profitEl.textContent = `Profit $${profit}`;
-                profitEl.className = 'profit-stat positive';
-            } else {
-                profitEl.textContent = `Loss $${-profit}`;
-                profitEl.className = 'profit-stat negative';
-            }
+            const el = document.getElementById(`profit${sys}`);
+            if (s.profit >= 0) { el.textContent = `Profit $${s.profit}`; el.className = 'profit-stat positive'; }
+            else { el.textContent = `Loss $${-s.profit}`; el.className = 'profit-stat negative'; }
         }
 
         function startAuto(sys) {
             if (systems[sys].auto) return;
             systems[sys].auto = true;
             const speed = parseInt(document.getElementById(`speed${sys}`).value) || 1000;
-            systems[sys].interval = setInterval(() => {
-                if (!systems[sys].jackpotWon) rollOnce(sys);
-                else stopAuto(sys);
-            }, speed);
+            systems[sys].interval = setInterval(() => { if (!systems[sys].jackpotWon) rollOnce(sys); else stopAuto(sys); }, speed);
         }
 
         function stopAuto(sys) {
@@ -470,20 +469,16 @@
 
         function resetSystem(sys) {
             const s = systems[sys];
-            s.spend = s.profit = 0;
-            s.history = [];
-            s.jackpotWon = false;
+            s.spend = s.profit = 0; s.history = []; s.jackpotWon = false;
             stopAuto(sys);
             document.getElementById(`rollBtn${sys}`).textContent = 'Roll';
             document.getElementById(`rollBtn${sys}`).classList.remove('btn-stop');
             document.getElementById(`autoCheck${sys}`).checked = false;
             updateSystemStats(sys);
-            const row = document.getElementById(`row${sys}`);
-            row.style.border = ''; row.style.boxShadow = '';
+            document.getElementById(`row${sys}`).style = '';
             updateGlobalStats();
         }
 
-        let currentSys = null;
         function openHistory(sys) {
             currentSys = sys;
             document.getElementById('modalTitle').textContent = `System ${sys} - Roll History`;
@@ -501,24 +496,15 @@
                 const div = document.createElement('div');
                 div.className = `history-entry ${entry.profit > 0 ? 'win' : ''}`;
                 const jackpot = entry.jackpot ? ' <span class="jackpot">JACKPOT!</span>' : '';
-                const nums = entry.pool.map(n => {
-                    if (latestWinning.main.includes(n)) return `<span class="match">${n}</span>`;
-                    if (n === latestWinning.additional) return `<span class="additional">${n}*</span>`;
-                    return n;
-                }).join(', ');
-                div.innerHTML = `
-                    <strong>Prize: $${entry.prize.toLocaleString()} | ${entry.profit >= 0 ? 'Profit' : 'Loss'}: $${Math.abs(entry.profit).toLocaleString()}${jackpot}</strong>
-                    <div class="group-win">Won: ${entry.groups}</div>
-                    <div style="font-size:12px;opacity:0.8;">[${nums}]</div>
-                `;
+                const nums = entry.pool.map(n => latestWinning.main.includes(n) ? `<span class="match">${n}</span>` : n === latestWinning.additional ? `<span class="additional">${n}*</span>` : n).join(', ');
+                div.innerHTML = `<strong>Prize: $${entry.prize.toLocaleString()} | ${entry.profit >= 0 ? 'Profit' : 'Loss'}: $${Math.abs(entry.profit).toLocaleString()}${jackpot}</strong><div class="group-win">Won: ${entry.groups}</div><div style="font-size:12px;opacity:0.8;">[${nums}]</div>`;
                 list.appendChild(div);
             });
         }
 
         function sortHistory(order) {
             if (!currentSys) return;
-            const s = systems[currentSys];
-            s.history.sort((a,b) => order === 'desc' ? b.profit - a.profit : a.profit - b.profit);
+            systems[currentSys].history.sort((a,b) => order === 'desc' ? b.profit - a.profit : a.profit - b.profit);
             renderHistory(currentSys);
         }
 
@@ -526,49 +512,25 @@
             const nums = [];
             for (let i = 1; i <= 6; i++) {
                 const val = document.getElementById(`num${i}`).value.trim();
-                if (!val || isNaN(val) || val < 1 || val > 49) {
-                    showNotice("Please fill all 6 winning numbers (1-49).");
-                    return false;
-                }
-                if (nums.includes(Number(val))) {
-                    showNotice("Duplicate numbers not allowed!");
-                    return false;
-                }
+                if (!val || isNaN(val) || val < 1 || val > 49) { showNotice("Fill all 6 numbers (1-49)."); return false; }
+                if (nums.includes(Number(val))) { showNotice("No duplicates!"); return false; }
                 nums.push(Number(val));
             }
             const add = document.getElementById('addNum').value.trim();
-            if (!add || isNaN(add) || add < 1 || add > 49) {
-                showNotice("Please enter valid Additional Number (1-49).");
-                return false;
-            }
-            if (nums.includes(Number(add))) {
-                showNotice("Additional number cannot be one of the main numbers!");
-                return false;
-            }
+            if (!add || isNaN(add) || add < 1 || add > 49) { showNotice("Valid Additional Number required."); return false; }
+            if (nums.includes(Number(add))) { showNotice("Additional cannot be main number!"); return false; }
             latestWinning = { main: nums, additional: Number(add) };
-            updatePrizes();
-            winCounts.fill(0, 1, 8);
-            timesPlayed = 0;
-            document.getElementById('g2-winners').value = 1;
-            document.getElementById('g3-winners').value = 1;
-            document.getElementById('g4-winners').value = 1;
-            updateShared();
-            updateWinDisplay();
-            notice.style.display = "none";
+            winCounts.fill(0,1,8); timesPlayed = 0;
+            document.getElementById('g2-winners').value = document.getElementById('g3-winners').value = document.getElementById('g4-winners').value = 1;
+            updatePrizes(); updateShared(); updateWinDisplay(); notice.style.display = "none";
+            resetChart();
             return true;
         }
 
-        function showNotice(msg) {
-            notice.textContent = msg;
-            notice.style.display = "block";
-        }
+        function showNotice(msg) { notice.textContent = msg; notice.style.display = "block"; }
 
         function generateRandom() {
-            const nums = [];
-            while (nums.length < 6) {
-                const n = Math.floor(Math.random() * 49) + 1;
-                if (!nums.includes(n)) nums.push(n);
-            }
+            const nums = []; while (nums.length < 6) { const n = Math.floor(Math.random() * 49) + 1; if (!nums.includes(n)) nums.push(n); }
             nums.sort((a,b)=>a-b);
             const add = Math.floor(Math.random() * 49) + 1;
             for (let i = 1; i <= 6; i++) document.getElementById(`num${i}`).value = nums[i-1];
@@ -577,11 +539,7 @@
         }
 
         function generateSystemNumbers(n) {
-            const nums = [];
-            while (nums.length < n) {
-                const r = Math.floor(Math.random() * 49) + 1;
-                if (!nums.includes(r)) nums.push(r);
-            }
+            const nums = []; while (nums.length < n) { const r = Math.floor(Math.random() * 49) + 1; if (!nums.includes(r)) nums.push(r); }
             return nums.sort((a,b)=>a-b);
         }
 
@@ -589,11 +547,7 @@
             const result = [];
             function combine(start, chosen) {
                 if (chosen.length === k) { result.push([...chosen]); return; }
-                for (let i = start; i < arr.length; i++) {
-                    chosen.push(arr[i]);
-                    combine(i + 1, chosen);
-                    chosen.pop();
-                }
+                for (let i = start; i < arr.length; i++) { chosen.push(arr[i]); combine(i + 1, chosen); chosen.pop(); }
             }
             combine(0, []);
             return result;
@@ -601,19 +555,64 @@
 
         function updateGlobalStats() {
             let profit = 0, loss = 0;
-            for (let sys = 6; sys <= 12; sys++) {
-                const s = systems[sys];
-                profit += s.profit;
-                if (s.profit < 0) loss -= s.profit;
+            for (let sys = 6; sys <= 12; sys++) { 
+                const s = systems[sys]; 
+                profit += s.profit; 
+                if (s.profit < 0) loss -= s.profit; 
             }
             document.getElementById('totalProfit').textContent = profit;
             document.getElementById('totalLoss').textContent = loss;
+        }
+
+        // CHART WITH TOP & BOTTOM 6
+        function initChart() {
+            const bars = document.getElementById('chartBars');
+            bars.innerHTML = '';
+            for (let i = 1; i <= 49; i++) {
+                const div = document.createElement('div');
+                div.className = 'bar-container';
+                div.innerHTML = `<div class="bar"><span class="bar-count">0</span></div><div class="bar-label">${i}</div>`;
+                bars.appendChild(div);
+            }
+        }
+
+        function updateChart() {
+            const freqData = Array.from({length: 49}, (_, i) => ({ num: i + 1, count: numberFrequency[i + 1] }))
+                .sort((a, b) => b.count - a.count);
+
+            const top6 = freqData.slice(0, 6).map(x => x.num);
+            const bottom6 = freqData.slice(-6).map(x => x.num).reverse();
+
+            document.getElementById('mostFreq').textContent = `6 Most Frequent Numbers: ${top6.join(', ')}`;
+            document.getElementById('leastFreq').textContent = `6 Least Frequent Numbers: ${bottom6.join(', ')}`;
+
+            const containers = document.querySelectorAll('#chartBars .bar-container');
+            containers.forEach((c, idx) => {
+                const num = idx + 1;
+                const count = numberFrequency[num];
+                const bar = c.querySelector('.bar');
+                const countEl = c.querySelector('.bar-count');
+                const height = Math.min(count * PX_PER_ROLL * scaleFactor, MAX_HEIGHT_PX);
+                bar.style.height = `${height}px`;
+                countEl.textContent = count;
+                countEl.classList.toggle('visible', count >= MIN_SHOW_LABEL && height > 20);
+                bar.classList.remove('top', 'bottom');
+                if (top6.includes(num)) bar.classList.add('top');
+                if (bottom6.includes(num)) bar.classList.add('bottom');
+            });
+        }
+
+        function resetChart() {
+            numberFrequency.fill(0);
+            scaleFactor = 1;
+            updateChart();
         }
 
         // INIT
         initSystems();
         updatePrizes();
         updateShared();
+        updateChart();
     </script>
 </body>
 </html>
